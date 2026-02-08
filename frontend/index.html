@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cyberbullying Detection</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #0f172a;
+            color: white;
+            text-align: center;
+            padding: 40px;
+        }
+
+        textarea {
+            width: 60%;
+            height: 120px;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 20px;
+            margin-top: 10px;
+            font-size: 16px;
+            background: #22c55e;
+            border: none;
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 20px;
+            background: #1e293b;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>AI-Based Cyberbullying Detection</h1>
+
+<textarea id="textInput" placeholder="Enter message here..."></textarea><br>
+
+<button onclick="analyze()">Analyze</button>
+
+<div class="result" id="output"></div>
+
+<script>
+function analyze() {
+    let text = document.getElementById("textInput").value;
+
+    fetch("http://127.0.0.1:8000/api/predict/?text=" + text)
+    .then(response => response.json())
+    .then(data => {
+
+        let output = `<h3>Prediction: ${data.prediction}</h3>`;
+
+        if(data.hash){
+            output += `<p>Hash: ${data.hash}</p>`;
+            output += `<p>Timestamp: ${data.timestamp}</p>`;
+        }
+
+        document.getElementById("output").innerHTML = output;
+    });
+}
+</script>
+
+</body>
+</html>
