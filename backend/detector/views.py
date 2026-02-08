@@ -1,18 +1,49 @@
-import json
-import pickle
 from django.http import JsonResponse
+from datetime import datetime
+import pickle, os, hashlib
+from .models import DetectionLog
 from django.views.decorators.csrf import csrf_exempt
 
-model = pickle.load(open("../model/model.pkl", "rb"))
-vectorizer = pickle.load(open("../model/vectorizer.pkl", "rb"))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+model = pickle.load(open(os.path.join(BASE_DIR, "model/model.pkl"), "rb"))
+vectorizer = pickle.load(open(os.path.join(BASE_DIR, "model/vectorizer.pkl"), "rb"))
 
 @csrf_exempt
 def predict(request):
-    if request.method == "POST":
-        data = json.loads(request.body)
-        text = data["message"]
 
-        vec = vectorizer.transform([text])
-        prediction = model.predict(vec)[0]
+    if request.method == "GET":
+        text = request.GET.get("text")
+    else:
+        text = request.POST.get("text")
 
-        return JsonResponse({"prediction": prediction})
+    if not text:
+        return JsonResponse({"error": "No text provided"})
+
+    text_vec = vectorizer.transform([text])
+    prediction = model.predict(text_vec)[0]
+
+    # If message is NORMAL → no forensic logging
+    if prediction == "NORMAL":
+        return JsonResponse({
+            "text": text,
+            "prediction": prediction
+        })
+
+    # Else → harmful content → generate evidence
+    hash_value = hashlib.sha256(text.encode()).hexdigest()
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    DetectionLog.objects.create(
+        text=text,
+        prediction=prediction,
+        hash_value=hash_value,
+    )
+
+    return JsonResponse({
+        "text": text,
+        "prediction": prediction,
+        "hash": hash_value,
+        "timestamp": timestamp
+    })
