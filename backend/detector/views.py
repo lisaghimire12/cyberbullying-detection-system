@@ -1,7 +1,7 @@
 from django.http import JsonResponse
-from datetime import datetime
-import pickle, os, hashlib
 from django.views.decorators.csrf import csrf_exempt
+import pickle, os, hashlib, re
+from datetime import datetime
 from .models import DetectionLog
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -9,95 +9,99 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 model = pickle.load(open(os.path.join(BASE_DIR, "model/model.pkl"), "rb"))
 vectorizer = pickle.load(open(os.path.join(BASE_DIR, "model/vectorizer.pkl"), "rb"))
 
+# --------------------
+# SAFE GREETINGS
+# --------------------
+SAFE_WORDS = [
+    "hi", "hello", "hey", "hii", "hola", "good morning",
+    "good evening", "how are you", "wassup", "sup"
+]
+
+# --------------------
+# STRONG RULE LISTS
+# --------------------
+HATE_PHRASES = [
+    "should die",
+    "kill yourself",
+    "go die",
+    "all indians should die"
+]
+
+ABUSIVE_WORDS = [
+    "pagal",
+    "idiot",
+    "stupid",
+    "bitch",
+    "loser",
+    "asshole",
+    "bastard"
+]
+
+# --------------------
 
 @csrf_exempt
 def predict(request):
 
-    if request.method == "GET":
-        text = request.GET.get("text")
-    else:
-        text = request.POST.get("text")
+    text = request.GET.get("text", "").lower().strip()
 
-    if not text:
-        return JsonResponse({"error": "No text provided"})
+    if text == "":
+        return JsonResponse({"prediction": "NORMAL"})
 
-    text_lower = text.lower()
-
-    # =============================
-    # ✅ POSITIVE WHITELIST
-    # =============================
-    positive_phrases = [
-        "i love", "you are beautiful", "you are pretty",
-        "great job", "well done", "nice work",
-        "amazing", "awesome", "fantastic"
-    ]
-
-    for p in positive_phrases:
-        if p in text_lower:
+    # -----------------------------------
+    # 1️⃣ WHITELIST GREETINGS FIRST
+    # -----------------------------------
+    for w in SAFE_WORDS:
+        if text == w or text.startswith(w + " "):
             return JsonResponse({
-                "text": text,
-                "prediction": "NORMAL"
+                "prediction": "NORMAL",
+                "confidence": 1.0
             })
 
-    # =============================
-    # 🔥 HATE SPEECH
-    # =============================
-    hate_groups = [
-        "all men", "all women", "all americans", "all foreigners",
-        "all muslims", "all hindus", "all christians",
-        "all blacks", "all whites", "all gays", "all lesbians"
-    ]
+    # -----------------------------------
+    # 2️⃣ HATE SPEECH (RULE)
+    # -----------------------------------
+    for phrase in HATE_PHRASES:
+        if phrase in text:
+            return block(text, "HATE-SPEECH")
 
-    for group in hate_groups:
-        if group in text_lower:
-            prediction = "HATE_SPEECH"
-            break
-    else:
+    # -----------------------------------
+    # 3️⃣ ABUSIVE WORDS (FULL WORD MATCH)
+    # -----------------------------------
+    for word in ABUSIVE_WORDS:
+        if re.search(rf"\b{word}\b", text):
+            return block(text, "ABUSIVE")
 
-        # =============================
-        # 🟠 ABUSIVE LANGUAGE
-        # =============================
-        abusive_words = [
-            "bitch", "fuck", "shit", "asshole", "bastard",
-            "slut", "whore", "moron", "idiot", "stupid"
-        ]
+    # -----------------------------------
+    # 4️⃣ ML MODEL
+    # -----------------------------------
+    vec = vectorizer.transform([text])
+    probs = model.predict_proba(vec)[0]
+    labels = model.classes_
 
-        for word in abusive_words:
-            if word in text_lower:
-                prediction = "ABUSIVE"
-                break
-        else:
+    pred = labels[probs.argmax()].upper().strip()
+    conf = probs.max()
 
-            # =============================
-            # 🤖 ML FALLBACK
-            # =============================
-            vec = vectorizer.transform([text])
-            prediction = model.predict(vec)[0]
-
-    # =============================
-    # ✅ NORMAL
-    # =============================
-    if prediction == "NORMAL":
+    if pred == "NORMAL":
         return JsonResponse({
-            "text": text,
-            "prediction": prediction
+            "prediction": "NORMAL",
+            "confidence": round(conf, 2)
         })
 
-    # =============================
-    # 🔐 FORENSIC LOGGING
-    # =============================
-    hash_value = hashlib.sha256(text.encode()).hexdigest()
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return block(text, pred)
+
+
+def block(text, label):
+    h = hashlib.sha256(text.encode()).hexdigest()
+    time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     DetectionLog.objects.create(
         text=text,
-        prediction=prediction,
-        hash_value=hash_value
+        prediction=label,
+        hash_value=h
     )
 
     return JsonResponse({
-        "text": text,
-        "prediction": prediction,
-        "hash": hash_value,
-        "timestamp": timestamp
+        "prediction": label,
+        "hash": h,
+        "timestamp": time
     })

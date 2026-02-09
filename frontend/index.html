@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Cyberbullying Detection</title>
+
     <style>
         body {
             font-family: Arial;
@@ -11,11 +12,23 @@
             padding: 40px;
         }
 
+        #chatBox {
+            width: 70%;
+            height: 300px;
+            margin: auto;
+            background: #1e293b;
+            padding: 15px;
+            overflow-y: auto;
+            border-radius: 8px;
+            text-align: left;
+        }
+
         textarea {
             width: 60%;
-            height: 120px;
+            height: 80px;
             padding: 10px;
             font-size: 16px;
+            margin-top: 20px;
         }
 
         button {
@@ -25,12 +38,27 @@
             background: #22c55e;
             border: none;
             cursor: pointer;
+            color: black;
+        }
+
+        .user {
+            color: #22c55e;
+            margin-bottom: 8px;
+        }
+
+        .blocked {
+            color: #ef4444;
+            margin-bottom: 8px;
         }
 
         .result {
             margin-top: 20px;
             background: #1e293b;
-            padding: 20px;
+            padding: 15px;
+            width: 70%;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -39,31 +67,52 @@
 
 <h1>AI-Based Cyberbullying Detection</h1>
 
+<div id="chatBox"></div>
+
 <textarea id="textInput" placeholder="Enter message here..."></textarea><br>
 
-<button onclick="analyze()">Analyze</button>
+<button onclick="analyze()">Send</button>
 
 <div class="result" id="output"></div>
 
 <script>
 function analyze() {
+
     let text = document.getElementById("textInput").value;
 
-    fetch("http://127.0.0.1:8000/api/predict/?text=" + text)
+    if(text.trim() === ""){
+        alert("Please enter a message");
+        return;
+    }
+
+    fetch("http://127.0.0.1:8000/api/predict/?text=" + encodeURIComponent(text))
     .then(response => response.json())
     .then(data => {
 
-        let output = `<h3>Prediction: ${data.prediction}</h3>`;
+        let chat = document.getElementById("chatBox");
 
-        if(data.hash){
-            output += `<p>Hash: ${data.hash}</p>`;
-            output += `<p>Timestamp: ${data.timestamp}</p>`;
+        // 🔥 FORCE CLEAN PREDICTION
+        let prediction = data.prediction.trim().toUpperCase();
+
+        console.log("Prediction:", prediction);
+
+        if(prediction === "NORMAL"){
+            chat.innerHTML += `<div class="user">User: ${text}</div>`;
+        }
+        else{
+            chat.innerHTML += `<div class="blocked">⚠ Blocked Message (${prediction})</div>`;
         }
 
-        document.getElementById("output").innerHTML = output;
+        document.getElementById("textInput").value = "";
+        chat.scrollTop = chat.scrollHeight;
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Backend error");
     });
 }
 </script>
+
 
 </body>
 </html>

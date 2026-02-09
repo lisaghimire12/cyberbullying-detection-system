@@ -1,83 +1,65 @@
 import pandas as pd
+import pickle
+
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report
-from sklearn.pipeline import Pipeline
-import pickle
+from sklearn.metrics import classification_report, accuracy_score
 
-# ============================
-# 1. LOAD & CLEAN DATA
-# ============================
 
+
+print("\nLoading dataset...")
 data = pd.read_csv("data/dataset.csv")
 
-data = data.dropna(subset=["Text", "Label"])
+print("Total Rows:", len(data))
+
+# Clean
+data = data.dropna()
 data["Text"] = data["Text"].astype(str).str.lower()
 data["Label"] = data["Label"].astype(str)
+
+print("\nLabel Distribution:")
+print(data["Label"].value_counts())
 
 X = data["Text"]
 y = data["Label"]
 
-# ============================
-# 2. STRATIFIED SPLIT
-# keeps class balance
-# ============================
-
+# Split
 X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
+    X, y,
     test_size=0.2,
     random_state=42,
     stratify=y
 )
 
-# ============================
-# 3. PIPELINE (VECTORIZER + MODEL)
-# ============================
+# Vectorizer
+vectorizer = TfidfVectorizer(
+    max_features=12000,
+    ngram_range=(1,2),
+    stop_words="english"
+)
 
-pipeline = Pipeline([
-    (
-        "tfidf",
-        TfidfVectorizer(
-            max_features=10000,
-            ngram_range=(1, 2),
-            min_df=2,
-            max_df=0.9,
-            sublinear_tf=True,
-            stop_words="english"
-        )
-    ),
-    (
-        "clf",
-        LogisticRegression(
-            max_iter=2000,
-            class_weight="balanced",
-            solver="liblinear"
-        )
-    )
-])
+X_train_vec = vectorizer.fit_transform(X_train)
+X_test_vec = vectorizer.transform(X_test)
 
-# ============================
-# 4. TRAIN
-# ============================
+# Model
+model = LogisticRegression(
+    max_iter=2000,
+    class_weight="balanced"
+)
 
-pipeline.fit(X_train, y_train)
+print("\nTraining model...")
+model.fit(X_train_vec, y_train)
 
-# ============================
-# 5. EVALUATE
-# ============================
+# Evaluate
+preds = model.predict(X_test_vec)
 
-predictions = pipeline.predict(X_test)
+print("\nAccuracy:", accuracy_score(y_test, preds))
+print("\nClassification Report:\n")
+print(classification_report(y_test, preds))
 
-print("\nAccuracy:", accuracy_score(y_test, predictions))
-print("\nDetailed Report:\n")
-print(classification_report(y_test, predictions))
+# Save
+pickle.dump(model, open("model/model.pkl", "wb"))
+pickle.dump(vectorizer, open("model/vectorizer.pkl", "wb"))
 
-# ============================
-# 6. SAVE MODEL
-# ============================
-
-pickle.dump(pipeline, open("model/model.pkl", "wb"))
-
-print("\nTraining Completed & Model Saved")
+print("\nModel & Vectorizer saved successfully!")
