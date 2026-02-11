@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import pickle, os, hashlib, re
+import subprocess
 from datetime import datetime
 from .models import DetectionLog
 
@@ -39,8 +40,21 @@ ABUSIVE_WORDS = [
 
 # --------------------
 
+def start_packet_capture():
+    try:
+        subprocess.Popen(#tcp.port == 8000
+            ["tshark", "-i", r"\Device\NPF_{8EEFC699-F111-4ECE-B9D8-61E03A3F7AAD}", "-c", "5"],#tshark -D
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )#adapter for lookback traffic capture
+    except:
+        pass
+
+
+
 @csrf_exempt
 def predict(request):
+    start_packet_capture()
 
     text = request.GET.get("text", "").lower().strip()
 
