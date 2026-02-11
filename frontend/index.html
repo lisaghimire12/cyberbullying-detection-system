@@ -75,7 +75,7 @@
 
 <div class="result" id="output"></div>
 
-<script>
+{#  <script>
 function analyze() {
 
     let text = document.getElementById("textInput").value;
@@ -111,7 +111,54 @@ function analyze() {
         alert("Backend error");
     });
 }
+</script>  #}
+
+
+<script>
+
+function analyze() {
+
+    let text = document.getElementById("textInput").value;
+    let resultBox = document.getElementById("output");
+    let chat = document.getElementById("chatBox");
+
+    if(text.trim() === ""){
+        alert("Please enter a message");
+        return;
+    }
+
+    fetch("http://127.0.0.1:8000/api/predict/?text=" + encodeURIComponent(text))
+    .then(response => response.json())
+    .then(data => {
+
+        // NORMAL MESSAGE
+        if(data.prediction === "NORMAL"){
+            chat.innerHTML += `<div class="user">User: ${text}</div>`;
+
+            resultBox.innerHTML = `
+                <h3>Prediction: NORMAL</h3>
+            `;
+        }
+
+        // BLOCKED MESSAGE
+        else{
+            chat.innerHTML += `<div class="blocked">⚠ Blocked Message</div>`;
+
+            resultBox.innerHTML = `
+                <h3>Prediction: ${data.prediction}</h3>
+                <p><b>Hash:</b> ${data.hash}</p>
+                <p><b>Timestamp:</b> ${data.timestamp}</p>
+            `;
+        }
+
+        document.getElementById("textInput").value = "";
+        chat.scrollTop = chat.scrollHeight;
+
+    });
+}
+
 </script>
+
 
 
 </body>
