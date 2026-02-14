@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Agentic AI Content Moderation System</title>
+
+<style>
+
+body{
+    background:#0f172a;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+}
+
+.container{
+    width:70%;
+    margin:auto;
+    margin-top:50px;
+    padding:30px;
+    background:#1e293b;
+    border-radius:12px;
+}
+
+input{
+    width:80%;
+    padding:12px;
+    border-radius:6px;
+    border:none;
+}
+
+button{
+    padding:12px 30px;
+    margin-top:15px;
+    background:#22c55e;
+    color:black;
+    font-size:16px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.results{
+    margin-top:30px;
+    text-align:left;
+}
+
+.normal{
+    color:#22c55e;
+}
+
+.blocked{
+    color:#ef4444;
+    border-bottom:1px solid #334155;
+    padding:10px;
+}
+
+.hash{
+    font-size:12px;
+    color:#facc15;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🔐 Agentic AI Content Moderation System</h1>
+<p>YouTube & E-Commerce Link Analyzer</p>
+
+<div class="container">
+
+<input type="text" id="url" placeholder="Paste YouTube / Amazon / Meesho / Flipkart link here">
+<br>
+<button onclick="analyze()">Analyze Link</button>
+
+<div class="results" id="results"></div>
+
+</div>
+
+<script>
+
+function analyze(){
+
+let url = document.getElementById("url").value;
+
+fetch("http://127.0.0.1:8000/api/analyze-link/?url=" + encodeURIComponent(url))
+.then(res => res.json())
+.then(data => {
+
+let box = document.getElementById("results");
+box.innerHTML = "";
+
+if(data.error){
+    box.innerHTML = data.error;
+    return;
+}
+
+data.results.forEach(item => {
+
+    if(item.prediction === "NORMAL"){
+        box.innerHTML += `
+        <p class="normal">✔ ${item.text}</p>
+        `;
+    }else{
+        box.innerHTML += `
+        <p class="blocked">
+        ⚠ ${item.text}<br>
+        <b>${item.prediction}</b><br>
+        <span class="hash">Hash: ${item.hash}</span><br>
+        <span class="hash">Time: ${item.timestamp}</span>
+        </p>
+        `;
+    }
+
+});
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
