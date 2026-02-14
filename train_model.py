@@ -38,6 +38,12 @@ vectorizer = TfidfVectorizer(
     ngram_range=(1,2),
     stop_words="english"
 )
+TfidfVectorizer(
+    ngram_range=(1,2),
+    max_features=20000,
+    stop_words="english"
+)
+
 
 X_train_vec = vectorizer.fit_transform(X_train)
 X_test_vec = vectorizer.transform(X_test)
