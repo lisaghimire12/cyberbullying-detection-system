@@ -1,8 +1,12 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
-
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from django.http import HttpResponse
 from .link_agents import detect_link_type, fetch_youtube_comments
+import io
+
 
 from .agents import (
     preprocess_agent,
@@ -114,3 +118,59 @@ def analyze_link(request):
         "summary": summary,
         "results": results
     })
+
+
+@csrf_exempt
+def download_report(request):
+
+    url = request.GET.get("url", "")
+
+    comments = fetch_youtube_comments(url)
+
+    buffer = io.BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    y = height - 40
+
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.drawString(40, y, "Agentic AI Content Moderation Evidence Report")
+    y -= 30
+
+    pdf.setFont("Helvetica", 10)
+    pdf.drawString(40, y, f"Video URL: {url}")
+    y -= 20
+
+    for text in comments:
+
+        clean = preprocess_agent(text)
+        prediction, confidence = classifier_agent(clean)
+
+        if prediction == "NORMAL":
+            continue
+
+        severity = severity_agent(prediction, confidence)
+        hash_value, timestamp = forensic_agent(clean)
+
+        pdf.drawString(40, y, f"Comment: {text[:120]}")
+        y -= 14
+        pdf.drawString(40, y, f"Prediction: {prediction}")
+        y -= 14
+        pdf.drawString(40, y, f"Severity: {severity}")
+        y -= 14
+        pdf.drawString(40, y, f"Hash: {hash_value}")
+        y -= 14
+        pdf.drawString(40, y, f"Time: {timestamp}")
+        y -= 25
+
+        if y < 100:
+            pdf.showPage()
+            y = height - 40
+
+    pdf.save()
+    buffer.seek(0)
+
+    response = HttpResponse(buffer, content_type="application/pdf")
+    response["Content-Disposition"] = "attachment; filename=forensic_report.pdf"
+
+    return response

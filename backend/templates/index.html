@@ -39,6 +39,10 @@ button{
     cursor:pointer;
 }
 
+button:hover{
+    opacity:0.9;
+}
+
 .results{
     margin-top:30px;
     text-align:left;
@@ -72,7 +76,11 @@ button{
 
 <input type="text" id="url" placeholder="Paste YouTube video link here">
 <br>
+
 <button onclick="analyze()">Analyze Link</button>
+<br><br>
+
+<button onclick="downloadReport()">Download Evidence Report (PDF)</button>
 
 <!-- DASHBOARD -->
 <div id="dashboard" style="margin-top:30px;"></div>
@@ -84,6 +92,9 @@ button{
 
 <script>
 
+// ------------------------------
+// ANALYZE LINK
+// ------------------------------
 async function analyze(){
 
     const url = document.getElementById("url").value.trim();
@@ -108,8 +119,6 @@ async function analyze(){
 
         const data = await response.json();
 
-        console.log("SERVER RESPONSE:", data);   // VERY IMPORTANT
-
         if(data.error){
             dashboard.innerHTML = "";
             resultsDiv.innerHTML = data.error;
@@ -119,7 +128,6 @@ async function analyze(){
         // ---------------------------
         // DASHBOARD
         // ---------------------------
-
         const s = data.summary;
 
         dashboard.innerHTML = `
@@ -136,7 +144,6 @@ async function analyze(){
         // ---------------------------
         // RESULTS
         // ---------------------------
-
         data.results.forEach(item => {
 
             if(item.prediction === "NORMAL"){
@@ -167,7 +174,25 @@ async function analyze(){
         console.error(err);
         alert("Backend connection failed");
     }
+}
 
+
+// ------------------------------
+// DOWNLOAD PDF
+// ------------------------------
+function downloadReport(){
+
+    const url = document.getElementById("url").value.trim();
+
+    if(url === ""){
+        alert("Paste YouTube link first");
+        return;
+    }
+
+    window.open(
+        "http://127.0.0.1:8000/api/download-report/?url=" 
+        + encodeURIComponent(url)
+    );
 }
 
 </script>
