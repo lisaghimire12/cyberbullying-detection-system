@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Agentic AI Content Moderation System</title>
+<title>Agentic AI Content Moderation System</title>
 
 <style>
 
@@ -46,6 +46,7 @@ button{
 
 .normal{
     color:#22c55e;
+    padding:8px;
 }
 
 .blocked{
@@ -65,56 +66,107 @@ button{
 <body>
 
 <h1>🔐 Agentic AI Content Moderation System</h1>
-<p>YouTube & E-Commerce Link Analyzer</p>
+<p>YouTube Link Analyzer</p>
 
 <div class="container">
 
-<input type="text" id="url" placeholder="Paste YouTube / Amazon / Meesho / Flipkart link here">
+<input type="text" id="url" placeholder="Paste YouTube video link here">
 <br>
 <button onclick="analyze()">Analyze Link</button>
 
+<!-- DASHBOARD -->
+<div id="dashboard" style="margin-top:30px;"></div>
+
+<!-- RESULTS -->
 <div class="results" id="results"></div>
 
 </div>
 
 <script>
 
-function analyze(){
+async function analyze(){
 
-let url = document.getElementById("url").value;
+    const url = document.getElementById("url").value.trim();
 
-fetch("http://127.0.0.1:8000/api/analyze-link/?url=" + encodeURIComponent(url))
-.then(res => res.json())
-.then(data => {
-
-let box = document.getElementById("results");
-box.innerHTML = "";
-
-if(data.error){
-    box.innerHTML = data.error;
-    return;
-}
-
-data.results.forEach(item => {
-
-    if(item.prediction === "NORMAL"){
-        box.innerHTML += `
-        <p class="normal">✔ ${item.text}</p>
-        `;
-    }else{
-        box.innerHTML += `
-        <p class="blocked">
-        ⚠ ${item.text}<br>
-        <b>${item.prediction}</b><br>
-        <span class="hash">Hash: ${item.hash}</span><br>
-        <span class="hash">Time: ${item.timestamp}</span>
-        </p>
-        `;
+    if(url === ""){
+        alert("Please paste a YouTube link");
+        return;
     }
 
-});
+    const dashboard = document.getElementById("dashboard");
+    const resultsDiv = document.getElementById("results");
 
-});
+    dashboard.innerHTML = "<p>⏳ Analyzing...</p>";
+    resultsDiv.innerHTML = "";
+
+    try{
+
+        const response = await fetch(
+            "http://127.0.0.1:8000/api/analyze-link/?url=" 
+            + encodeURIComponent(url)
+        );
+
+        const data = await response.json();
+
+        console.log("SERVER RESPONSE:", data);   // VERY IMPORTANT
+
+        if(data.error){
+            dashboard.innerHTML = "";
+            resultsDiv.innerHTML = data.error;
+            return;
+        }
+
+        // ---------------------------
+        // DASHBOARD
+        // ---------------------------
+
+        const s = data.summary;
+
+        dashboard.innerHTML = `
+            <h2>📊 Dashboard Summary</h2>
+            <p>Total Comments: ${s.total_comments}</p>
+            <p>Normal: ${s.normal}</p>
+            <p>Abusive: ${s.abusive}</p>
+            <p>Cyberbullying: ${s.cyberbullying}</p>
+            <p>Hate Speech: ${s.hate_speech}</p>
+            <p>Total Flagged: ${s.total_flagged}</p>
+            <hr>
+        `;
+
+        // ---------------------------
+        // RESULTS
+        // ---------------------------
+
+        data.results.forEach(item => {
+
+            if(item.prediction === "NORMAL"){
+                resultsDiv.innerHTML += `
+                    <p class="normal">
+                        ✔ ${item.text}
+                    </p>
+                `;
+            }
+            else{
+                resultsDiv.innerHTML += `
+                    <p class="blocked">
+                        ⚠ ${item.text}<br>
+                        <b>${item.prediction}</b><br>
+                        Confidence: ${item.confidence}<br>
+                        Severity Score: ${item.severity_score}<br>
+                        Risk Level: ${item.risk_level}<br>
+                        Hash: ${item.hash}<br>
+                        Time: ${item.timestamp}
+                    </p>
+                `;
+            }
+
+        });
+
+    }
+    catch(err){
+        console.error(err);
+        alert("Backend connection failed");
+    }
 
 }
 

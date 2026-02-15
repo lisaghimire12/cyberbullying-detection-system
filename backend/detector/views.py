@@ -2,108 +2,115 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 
-from .link_agents import (
-    detect_link_type,
-    fetch_youtube_comments,
-    fetch_ecommerce_reviews
-)
+from .link_agents import detect_link_type, fetch_youtube_comments
 
 from .agents import (
-    input_agent,
     preprocess_agent,
     classifier_agent,
+    severity_agent,
+    explainability_agent,
     forensic_agent
 )
 
-
-# -------------------------
+# --------------------------------
 # HOME PAGE
-# -------------------------
+# --------------------------------
 def home(request):
     return render(request, "index.html")
 
-
-# -------------------------
-# TEXT ANALYSIS (Agent Pipeline)
-# -------------------------
-@csrf_exempt
-def predict(request):
-
-    text = request.GET.get("text", "")
-
-    # AGENT 1 → Input Agent
-    raw_text = input_agent(text)
-
-    if raw_text == "":
-        return JsonResponse({"prediction": "NORMAL"})
-
-    # AGENT 2 → Preprocess Agent
-    clean_text = preprocess_agent(raw_text)
-
-    # AGENT 3 → Classifier Agent
-    prediction, confidence = classifier_agent(clean_text)
-
-    if prediction == "NORMAL":
-        return JsonResponse({
-            "prediction": "NORMAL",
-            "confidence": confidence
-        })
-
-    # AGENT 4 → Forensic Agent
-    hash_value, timestamp = forensic_agent(clean_text, prediction)
-
-    return JsonResponse({
-        "prediction": prediction,
-        "hash": hash_value,
-        "timestamp": timestamp
-    })
-
-
-# -------------------------
-# LINK ANALYSIS (Agentic Flow)
-# -------------------------
+# --------------------------------
+# YOUTUBE LINK ANALYSIS
+# --------------------------------
 @csrf_exempt
 def analyze_link(request):
 
-    url = request.GET.get("url", "")
+    url = request.GET.get("url", "").strip()
 
     if url == "":
         return JsonResponse({"error": "No URL provided"})
 
-    link_type = detect_link_type(url)
+    if detect_link_type(url) != "youtube":
+        return JsonResponse({"error": "Only YouTube links supported"})
 
-    if link_type == "youtube":
-        texts = fetch_youtube_comments(url)
-
-    elif link_type == "ecommerce":
-        texts = fetch_ecommerce_reviews(url)
-
-    else:
-        return JsonResponse({"error": "Unsupported link type"})
+    comments = fetch_youtube_comments(url)
 
     results = []
 
-    for text in texts:
+    # -------- DASHBOARD COUNTERS --------
+    total_comments = 0
+    normal = 0
+    abusive = 0
+    cyberbullying = 0
+    hate_speech = 0
 
-        clean_text = preprocess_agent(text)
-        prediction, confidence = classifier_agent(clean_text)
+    # -----------------------------------
+    for text in comments:
 
-        if prediction == "NORMAL":
-            results.append({
-                "text": text,
-                "prediction": prediction,
-                "confidence": confidence
-            })
+        total_comments += 1
+
+        clean = preprocess_agent(text)
+        prediction, confidence = classifier_agent(clean)
+
+        severity_score = severity_agent(prediction, confidence)
+        explanation = explainability_agent(prediction)
+
+        # ---------- RISK LEVEL ----------
+        if severity_score >= 80:
+            risk = "CRITICAL"
+        elif severity_score >= 60:
+            risk = "HIGH"
+        elif severity_score >= 40:
+            risk = "MEDIUM"
         else:
-            hash_value, timestamp = forensic_agent(clean_text, prediction)
+            risk = "LOW"
+
+        # ---------- NORMAL ----------
+        if prediction == "NORMAL":
+
+            normal += 1
 
             results.append({
                 "text": text,
                 "prediction": prediction,
-                "confidence": confidence,
+                "confidence": round(confidence,2),
+                "severity_score": severity_score,
+                "risk_level": risk,
+                "explanation": explanation
+            })
+
+        # ---------- HARMFUL ----------
+        else:
+
+            if prediction == "ABUSIVE":
+                abusive += 1
+            elif prediction == "CYBERBULLYING":
+                cyberbullying += 1
+            elif prediction == "HATE-SPEECH":
+                hate_speech += 1
+
+            hash_value, timestamp = forensic_agent(clean)
+
+            results.append({
+                "text": text,
+                "prediction": prediction,
+                "confidence": round(confidence,2),
+                "severity_score": severity_score,
+                "risk_level": risk,
+                "explanation": explanation,
                 "hash": hash_value,
                 "timestamp": timestamp
             })
 
+    summary = {
+        "total_comments": total_comments,
+        "normal": normal,
+        "abusive": abusive,
+        "cyberbullying": cyberbullying,
+        "hate_speech": hate_speech,
+        "total_flagged": abusive + cyberbullying + hate_speech
+    }
 
-    return JsonResponse({"results": results})
+    return JsonResponse({
+        "summary": summary,
+        "results": results
+    })

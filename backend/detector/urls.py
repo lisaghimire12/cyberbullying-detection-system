@@ -2,7 +2,11 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+
+    # Home Page
     path("", views.home),
-    path("api/predict/", views.predict),
+
+    # YouTube Link Analyzer API
     path("api/analyze-link/", views.analyze_link),
+
 ]
