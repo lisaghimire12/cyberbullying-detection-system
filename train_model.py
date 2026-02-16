@@ -9,7 +9,9 @@ from sklearn.metrics import classification_report, accuracy_score
 
 
 print("\nLoading dataset...")
-data = pd.read_csv("data/dataset.csv")
+data = pd.read_csv("data/dataset.csv", encoding="utf-8-sig")
+data.columns = data.columns.str.strip()
+
 
 print("Total Rows:", len(data))
 

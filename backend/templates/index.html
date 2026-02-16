@@ -1,67 +1,211 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Agentic AI Content Moderation System</title>
+<title>Agentic AI Harassment & Cyberbullying Detection</title>
 
 <style>
 
+/* ---------------- THEME VARIABLES ---------------- */
+:root{
+  --bg:#0b1220;
+  --panel:#111827;
+  --card:#0f172a;
+  --text:#e5e7eb;
+  --input-bg:#1f2933;
+  --input-text:#e5e7eb;
+  --accent:#2dd4bf;        /* soft teal */
+  --accent-soft:#5eead4;
+}
+
+.light{
+  --bg:#f8fafc;
+  --panel:#ffffff;
+  --card:#f1f5f9;
+  --text:#0f172a;
+  --input-bg:#ffffff;
+  --input-text:#0f172a;
+  --accent:#0ea5a4;
+  --accent-soft:#14b8a6;
+}
+
+/* ---------------- BASE ---------------- */
 body{
-    background:#0f172a;
-    color:white;
-    font-family:Arial;
-    text-align:center;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial;
+  text-align:center;
+  margin:0;
+  opacity:0;
+  animation:fade 1s forwards;
+  animation-delay:0.5s;
 }
 
+@keyframes fade{to{opacity:1;}}
+
+/* ---------------- TOP BAR ---------------- */
+.topHeader{
+  display:flex;
+  justify-content:flex-end;
+  padding:15px 25px;
+}
+
+/* ---------------- SWITCH ---------------- */
+.switch{
+  position:relative;
+  width:52px;
+  height:26px;
+}
+.switch input{display:none;}
+
+.slider{
+  position:absolute;
+  inset:0;
+  background:#334155;
+  border-radius:26px;
+  cursor:pointer;
+  transition:0.4s;
+}
+.slider:before{
+  content:"";
+  position:absolute;
+  width:22px;
+  height:22px;
+  background:white;
+  border-radius:50%;
+  top:2px;
+  left:3px;
+  transition:0.4s;
+}
+input:checked + .slider{
+  background:var(--accent);
+}
+input:checked + .slider:before{
+  transform:translateX(24px);
+}
+
+/* ---------------- CONTAINER ---------------- */
 .container{
-    width:70%;
-    margin:auto;
-    margin-top:50px;
-    padding:30px;
-    background:#1e293b;
-    border-radius:12px;
+  width:70%;
+  margin:auto;
+  margin-top:40px;
+  padding:30px;
+  background:var(--panel);
+  border-radius:12px;
 }
 
-input{
-    width:80%;
-    padding:12px;
-    border-radius:6px;
-    border:none;
+/* ---------------- INPUT ---------------- */
+input[type=text]{
+  width:80%;
+  padding:12px;
+  border-radius:6px;
+  border:1px solid #475569;
+  background:var(--input-bg);
+  color:var(--input-text);
 }
 
+/* ---------------- BUTTON ---------------- */
 button{
-    padding:12px 30px;
-    margin-top:15px;
-    background:#22c55e;
-    color:black;
-    font-size:16px;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
+  padding:12px 25px;
+  margin-top:15px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-soft));
+  color:#042f2e;
+  font-size:16px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  transition:0.3s;
 }
 
 button:hover{
-    opacity:0.9;
+  transform:scale(1.05);
+  opacity:0.9;
 }
 
+/* ---------------- LOADER ---------------- */
+#loader{
+  display:none;
+  margin-top:25px;
+}
+.spinner{
+  width:45px;
+  height:45px;
+  border:5px solid #334155;
+  border-top:5px solid var(--accent);
+  border-radius:50%;
+  margin:auto;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ---------------- DASHBOARD ---------------- */
+#dashboard{
+  display:none;
+  margin-top:30px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:15px;
+}
+.card{
+  background:var(--card);
+  padding:20px;
+  border-radius:10px;
+  transition:0.3s;
+}
+.card:hover{
+  transform:translateY(-6px) scale(1.03);
+  box-shadow:0 0 15px var(--accent);
+}
+
+/* ---------------- RESULTS PAGE ---------------- */
+#resultsPage{
+  position:fixed;
+  top:0;
+  left:100%;
+  width:100%;
+  height:100%;
+  background:var(--bg);
+  padding:40px 60px;
+  overflow-y:auto;
+  transition:0.6s;
+}
+#resultsPage.active{left:0;}
+
+.topBar{
+  display:flex;
+  justify-content:space-between;
+  max-width:900px;
+  margin:auto;
+}
+
+/* ---------------- RESULTS ---------------- */
 .results{
-    margin-top:30px;
-    text-align:left;
+  max-width:900px;
+  margin:20px auto;
+  text-align:left;
+}
+
+/* Scroll animation */
+.reveal{
+  opacity:0;
+  transform:translateY(30px);
+  transition:0.6s;
+}
+.reveal.show{
+  opacity:1;
+  transform:translateY(0);
 }
 
 .normal{
-    color:#22c55e;
-    padding:8px;
+  color:#34d399;
+  padding:8px;
 }
 
 .blocked{
-    color:#ef4444;
-    border-bottom:1px solid #334155;
-    padding:10px;
-}
-
-.hash{
-    font-size:12px;
-    color:#facc15;
+  color:#fb7185;
+  border-bottom:1px solid #475569;
+  padding:10px;
 }
 
 </style>
@@ -69,130 +213,148 @@ button:hover{
 
 <body>
 
-<h1>🔐 Agentic AI Content Moderation System</h1>
-<p>YouTube Link Analyzer</p>
+<div class="topHeader">
+<label class="switch">
+<input type="checkbox" onchange="toggleTheme()">
+<span class="slider"></span>
+</label>
+</div>
+
+<h1>AI-Based Cyberbullying and Harassment Detection System</h1>
+<p>YouTube Link Analyzer - Using Agentic AI</p>
 
 <div class="container">
 
-<input type="text" id="url" placeholder="Paste YouTube video link here">
+<input type="text" id="url" placeholder="Paste YouTube video link here"><br>
+
+<button onclick="analyze()">Analyze</button>
+
+<div id="loader">
+<div class="spinner"></div>
+<p>Analyzing...</p>
+</div>
+
+<div id="dashboard">
+
+<h2>Dashboard Summary</h2>
+
+<div class="grid">
+  <div class="card" id="total"></div>
+  <div class="card" id="normal"></div>
+  <div class="card" id="abusive"></div>
+  <div class="card" id="cyber"></div>
+  <div class="card" id="hate"></div>
+  <div class="card" id="flagged"></div>
+</div>
+
 <br>
+<button onclick="openResults()">View Comments</button>
 
-<button onclick="analyze()">Analyze Link</button>
-<br><br>
+</div>
 
-<button onclick="downloadReport()">Download Evidence Report (PDF)</button>
+</div>
 
-<!-- DASHBOARD -->
-<div id="dashboard" style="margin-top:30px;"></div>
+<!-- RESULTS PAGE -->
+<div id="resultsPage">
 
-<!-- RESULTS -->
+<div class="topBar">
+<button onclick="closeResults()">⬅ Back</button>
+<button onclick="downloadReport()">Download PDF</button>
+</div>
+
+<h2>Comment Analyzer</h2>
 <div class="results" id="results"></div>
 
 </div>
 
 <script>
 
-// ------------------------------
-// ANALYZE LINK
-// ------------------------------
-async function analyze(){
-
-    const url = document.getElementById("url").value.trim();
-
-    if(url === ""){
-        alert("Please paste a YouTube link");
-        return;
-    }
-
-    const dashboard = document.getElementById("dashboard");
-    const resultsDiv = document.getElementById("results");
-
-    dashboard.innerHTML = "<p>⏳ Analyzing...</p>";
-    resultsDiv.innerHTML = "";
-
-    try{
-
-        const response = await fetch(
-            "http://127.0.0.1:8000/api/analyze-link/?url=" 
-            + encodeURIComponent(url)
-        );
-
-        const data = await response.json();
-
-        if(data.error){
-            dashboard.innerHTML = "";
-            resultsDiv.innerHTML = data.error;
-            return;
-        }
-
-        // ---------------------------
-        // DASHBOARD
-        // ---------------------------
-        const s = data.summary;
-
-        dashboard.innerHTML = `
-            <h2>📊 Dashboard Summary</h2>
-            <p>Total Comments: ${s.total_comments}</p>
-            <p>Normal: ${s.normal}</p>
-            <p>Abusive: ${s.abusive}</p>
-            <p>Cyberbullying: ${s.cyberbullying}</p>
-            <p>Hate Speech: ${s.hate_speech}</p>
-            <p>Total Flagged: ${s.total_flagged}</p>
-            <hr>
-        `;
-
-        // ---------------------------
-        // RESULTS
-        // ---------------------------
-        data.results.forEach(item => {
-
-            if(item.prediction === "NORMAL"){
-                resultsDiv.innerHTML += `
-                    <p class="normal">
-                        ✔ ${item.text}
-                    </p>
-                `;
-            }
-            else{
-                resultsDiv.innerHTML += `
-                    <p class="blocked">
-                        ⚠ ${item.text}<br>
-                        <b>${item.prediction}</b><br>
-                        Confidence: ${item.confidence}<br>
-                        Severity Score: ${item.severity_score}<br>
-                        Risk Level: ${item.risk_level}<br>
-                        Hash: ${item.hash}<br>
-                        Time: ${item.timestamp}
-                    </p>
-                `;
-            }
-
-        });
-
-    }
-    catch(err){
-        console.error(err);
-        alert("Backend connection failed");
-    }
+// THEME
+function toggleTheme(){
+ document.body.classList.toggle("light");
 }
 
+// ANALYZE
+async function analyze(){
+ const url=document.getElementById("url").value.trim();
+ if(url===""){alert("Paste YouTube link");return;}
 
-// ------------------------------
-// DOWNLOAD PDF
-// ------------------------------
+ dashboard.style.display="none";
+ loader.style.display="block";
+
+ const res=await fetch(
+ "http://127.0.0.1:8000/api/analyze-link/?url="+
+ encodeURIComponent(url)
+ );
+
+ const data=await res.json();
+
+ loader.style.display="none";
+ dashboard.style.display="block";
+
+ const s=data.summary;
+
+ total.innerHTML="Total Comments<br><b>"+s.total_comments+"</b>";
+ normal.innerHTML="Normal<br><b>"+s.normal+"</b>";
+ abusive.innerHTML="Abusive<br><b>"+s.abusive+"</b>";
+ cyber.innerHTML="Cyberbullying<br><b>"+s.cyberbullying+"</b>";
+ hate.innerHTML="Hate Speech<br><b>"+s.hate_speech+"</b>";
+ flagged.innerHTML="Total Flagged<br><b>"+s.total_flagged+"</b>";
+
+ results.innerHTML="";
+
+ data.results.forEach(item=>{
+  if(item.prediction==="NORMAL"){
+   results.innerHTML+=`<p class="normal reveal">✔ ${item.text}</p>`;
+  }else{
+   results.innerHTML+=`
+   <p class="blocked reveal">
+   ⚠ ${item.text}<br>
+   ${item.prediction}<br>
+   Confidence: ${item.confidence}<br>
+   Severity: ${item.severity_score}<br>
+   Risk: ${item.risk_level}<br>
+   Reason: ${item.explanation}<br>
+   Hash: ${item.hash}<br>
+   Time: ${item.timestamp}
+   </p>`;
+  }
+ });
+
+ observeReveal();
+}
+
+// SCROLL REVEAL
+function observeReveal(){
+ const elements=document.querySelectorAll(".reveal");
+ const observer=new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+   if(entry.isIntersecting){
+    entry.target.classList.add("show");
+   }
+  });
+ });
+
+ elements.forEach(el=>observer.observe(el));
+}
+
+// NAV
+function openResults(){
+ resultsPage.classList.add("active");
+}
+function closeResults(){
+ resultsPage.classList.remove("active");
+}
+
+// PDF
 function downloadReport(){
+ const url=document.getElementById("url").value.trim();
+ if(url===""){alert("Paste YouTube link first");return;}
 
-    const url = document.getElementById("url").value.trim();
-
-    if(url === ""){
-        alert("Paste YouTube link first");
-        return;
-    }
-
-    window.open(
-        "http://127.0.0.1:8000/api/download-report/?url=" 
-        + encodeURIComponent(url)
-    );
+ window.open(
+ "http://127.0.0.1:8000/api/download-report/?url="+
+ encodeURIComponent(url)
+ );
 }
 
 </script>
