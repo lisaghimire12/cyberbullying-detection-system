@@ -1,236 +1,301 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Agentic AI Harassment & Cyberbullying Detection</title>
+<meta charset="UTF-8">
+<title>AI Sentinel - Cyberbullying Detection</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
 
-/* ---------------- THEME VARIABLES ---------------- */
+/* ========== THEME VARIABLES ========== */
 :root{
-  --bg:#0b1220;
-  --panel:#111827;
-  --card:#0f172a;
-  --text:#e5e7eb;
-  --input-bg:#1f2933;
-  --input-text:#e5e7eb;
-  --accent:#4FD1C5;
-  --accent-soft:#81E6D9;
-
+--bg:#0b1220;
+--panel:#111827;
+--card:#0f172a;
+--text:#e5e7eb;
+--input-bg:#1f2933;
+--input-text:#e5e7eb;
+--accent:#4FD1C5;
+--accent-soft:#81E6D9;
 }
 
 .light{
-  --bg:#F4F0E4;
-  --panel:#ffffff;
-  --card:#FFA6A6;
-  --text: black;
-  --input-bg:#ffffff;
-  --input-text:#0f172a;
-  --accent:#4FD1C5;
-  --accent-soft:#81E6D9;
-
-
+--bg:#F5F9FF;        /* soft bluish white */
+--panel:#FFFFFF;
+--card:#ECF3FF;      /* subtle blue card */
+--text:#0B1220;
+--input-bg:#FFFFFF;
+--input-text:#0B1220;
+--accent:#4FD1C5;
+--accent-soft:#81E6D9;
 }
 
-/* ---------------- BASE ---------------- */
+
+/* ========== BASE ========== */
+*{margin:0;padding:0;box-sizing:border-box;}
+
 body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:Arial;
-  text-align:center;
-  margin:0;
-  opacity:0;
-  animation:fade 1s forwards;
-  animation-delay:0.5s;
+font-family:'Inter',sans-serif;
+background:linear-gradient(180deg,var(--bg),#020617);
+color:var(--text);
+overflow-x:hidden;
 }
 
-@keyframes fade{to{opacity:1;}}
 
-/* ---------------- TOP BAR ---------------- */
-.topHeader{
-  display:flex;
-  justify-content:flex-end;
-  padding:15px 25px;
+/* GRID */
+body::before{
+content:"";
+position:fixed;
+width:100%;
+height:100%;
+background-image:
+linear-gradient(rgba(79,209,197,0.05) 1px, transparent 1px),
+linear-gradient(90deg, rgba(79,209,197,0.05) 1px, transparent 1px);
+background-size:40px 40px;
+z-index:-1;
 }
 
-/* ---------------- SWITCH ---------------- */
+
+/* ========== NAVBAR ========== */
+nav{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px 60px;
+}
+
+.logo{
+font-family:'Orbitron';
+font-weight:800;
+font-size:22px;
+color:var(--accent);
+}
+
 .switch{
-  position:relative;
-  width:52px;
-  height:26px;
+position:relative;width:52px;height:26px;
 }
 .switch input{display:none;}
-
 .slider{
-  position:absolute;
-  inset:0;
-  background:#334155;
-  border-radius:26px;
-  cursor:pointer;
-  transition:0.4s;
+position:absolute;inset:0;background:#334155;border-radius:26px;cursor:pointer;
 }
 .slider:before{
-  content:"";
-  position:absolute;
-  width:22px;
-  height:22px;
-  background:white;
-  border-radius:50%;
-  top:2px;
-  left:3px;
-  transition:0.4s;
+content:"";width:22px;height:22px;background:white;border-radius:50%;
+position:absolute;top:2px;left:3px;transition:0.3s;
 }
-input:checked + .slider{
-  background:var(--accent);
-}
-input:checked + .slider:before{
-  transform:translateX(24px);
+input:checked + .slider{background:var(--accent);}
+input:checked + .slider:before{transform:translateX(24px);}
+
+/* ========== HERO ========== */
+.hero{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:80px 60px;
 }
 
-/* ---------------- CONTAINER ---------------- */
-.container{
-  width:70%;
-  margin:auto;
-  margin-top:40px;
-  padding:30px;
-  background:var(--panel);
-  border-radius:12px;
+.hero h1{
+font-family:'Orbitron';
+font-size:60px;
+}
+.hero span{color:var(--accent);}
+
+.primary-btn{
+background:linear-gradient(135deg,var(--accent),var(--accent-soft));
+padding:14px 28px;
+border-radius:12px;
+border:none;
+font-weight:600;
+cursor:pointer;
+color:#042f2e;
+margin-top:25px;
+transition:0.3s;
+}
+.primary-btn:hover{
+transform:scale(1.05);
+box-shadow:0 0 20px var(--accent);
 }
 
-/* ---------------- INPUT ---------------- */
+/* TERMINAL */
+.terminal{
+width:45%;
+background:#0b1120;
+padding:20px;
+border-radius:15px;
+border:1px solid rgba(79,209,197,0.3);
+box-shadow:0 0 25px rgba(79,209,197,0.2);
+}
+
+/* ========== SCANNER ========== */
+.scanner{
+padding:80px 60px;
+text-align:center;
+}
+
 input[type=text]{
-  width:80%;
-  padding:12px;
-  border-radius:6px;
-  border:1px solid #475569;
-  background:var(--input-bg);
-  color:var(--input-text);
+width:60%;
+padding:14px;
+border-radius:10px;
+background:var(--input-bg);
+color:var(--input-text);
+border:1px solid #475569;
 }
 
-/* ---------------- BUTTON ---------------- */
-button{
-  padding:12px 25px;
-  margin-top:15px;
-  background:linear-gradient(135deg,var(--accent),var(--accent-soft));
-  color:#042f2e;
-  font-size:16px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-  transition:0.3s;
-}
-
-button:hover{
-  transform:scale(1.05);
-  opacity:0.9;
-}
-
-/* ---------------- LOADER ---------------- */
-#loader{
-  display:none;
-  margin-top:25px;
-}
+/* LOADER */
+#loader{display:none;margin-top:20px;}
 .spinner{
-  width:45px;
-  height:45px;
-  border:5px solid #334155;
-  border-top:5px solid var(--accent);
-  border-radius:50%;
-  margin:auto;
-  animation:spin 1s linear infinite;
+width:40px;height:40px;border:5px solid #475569;
+border-top:5px solid var(--accent);
+border-radius:50%;
+margin:auto;
+animation:spin 1s linear infinite;
 }
 @keyframes spin{to{transform:rotate(360deg);}}
 
-/* ---------------- DASHBOARD ---------------- */
-#dashboard{
-  display:none;
-  margin-top:30px;
-}
+/* DASHBOARD */
+#dashboard{display:none;margin-top:40px;}
 .grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:15px;
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:15px;
 }
 .card{
-  background:var(--card);
-  padding:20px;
-  border-radius:10px;
-  transition:0.3s;
+background:var(--card);
+padding:20px;
+border-radius:10px;
+transition:0.3s;
 }
 .card:hover{
-  transform:translateY(-6px) scale(1.03);
-  box-shadow:0 0 15px var(--accent);
+transform:translateY(-6px);
+box-shadow:0 0 15px var(--accent);
 }
 
-/* ---------------- RESULTS PAGE ---------------- */
+/* RESULTS PAGE */
+.results-wrapper{
+max-width:900px;
+margin:auto;
+}
+
+.results-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
 #resultsPage{
-  position:fixed;
-  top:0;
-  left:100%;
-  width:100%;
-  height:100%;
-  background:var(--bg);
-  padding:40px 60px;
-  overflow-y:auto;
-  transition:0.6s;
+position:fixed;
+top:0;left:100%;
+width:100%;height:100%;
+background:var(--bg);
+padding:40px;
+transition:0.6s;
+overflow-y:auto;
 }
 #resultsPage.active{left:0;}
 
-.topBar{
-  display:flex;
-  justify-content:space-between;
-  max-width:900px;
-  margin:auto;
-}
-
-/* ---------------- RESULTS ---------------- */
 .results{
-  max-width:900px;
-  margin:20px auto;
-  text-align:left;
+max-width:900px;
+margin:auto;
+text-align:left;
 }
 
-/* Scroll animation */
 .reveal{
-  opacity:0;
-  transform:translateY(30px);
-  transition:0.6s;
+opacity:0;transform:translateY(30px);transition:0.6s;
 }
-.reveal.show{
-  opacity:1;
-  transform:translateY(0);
+.reveal.show{opacity:1;transform:translateY(0);}
+
+.normal{color:#34d399;padding:8px;}
+.blocked{color:#fb7185;border-bottom:1px solid #475569;padding:10px;}
+
+/* ===== LIGHT MODE TEXT VISIBILITY FIX ===== */
+
+.light h1,
+.light h2,
+.light h3,
+.light p,
+.light .logo,
+.light .hero h1,
+.light .hero span,
+.light .terminal p{
+  color: var(--text) !important;
 }
 
-.normal{
-  color:#34d399;
-  padding:8px;
+/* Accent words still teal */
+.light .hero span{
+  color: var(--accent) !important;
 }
 
-.blocked{
-  color:#fb7185;
-  border-bottom:1px solid #475569;
+/* Terminal box readable */
+.light .terminal{
+  background:#e8f0ff;
+  border:1px solid rgba(79,209,197,0.4);
+}
+
+/* Terminal text darker */
+.light .terminal p{
+  color:#0b1220 !important;
+}
+
+/* ===== LIGHT MODE COMMENT COLORS FIX ===== */
+
+.light .normal{
+  color:#047857;           /* deep emerald green */
+  font-weight:600;
+}
+
+.light .blocked{
+  color:#b91c1c;           /* strong red */
+  background:#fee2e2;      /* soft red background */
+  border-left:5px solid #dc2626;
+  border-radius:8px;
+  padding:12px;
+}
+
+
+.light .normal{
+  background:#dcfce7;
+  border-left:5px solid #16a34a;
+  border-radius:8px;
   padding:10px;
 }
+
 
 </style>
 </head>
 
 <body>
 
-<div class="topHeader">
+<nav>
+<div class="logo">AI SENTINEL</div>
+
 <label class="switch">
 <input type="checkbox" onchange="toggleTheme()">
 <span class="slider"></span>
 </label>
+</nav>
+
+<section class="hero">
+<div>
+<h1>Detect <span>Cyberbullying</span><br>Before It Spreads</h1>
+<button class="primary-btn" onclick="document.getElementById('scanner').scrollIntoView({behavior:'smooth'})">Launch Scanner</button>
 </div>
 
-<h1>AI-Based Cyberbullying and Harassment Detection System</h1>
-<p>YouTube Link Analyzer - Using Agentic AI</p>
+<div class="terminal">
+<p>$ NLP Loaded</p>
+<p>$ Threat DB Updated</p>
+<p>$ System Ready...</p>
+</div>
+</section>
 
-<div class="container">
+<!-- ========== SCANNER SECTION ========== -->
+<section class="scanner" id="scanner">
 
-<input type="text" id="url" placeholder="Paste YouTube video link here"><br>
+<h2>Launch YouTube Comment Scanner</h2><br>
 
-<button onclick="analyze()">Analyze</button>
+<input type="text" id="url" placeholder="Paste YouTube video URL"><br>
+
+<button class="primary-btn" onclick="analyze()">Analyze</button>
 
 <div id="loader">
 <div class="spinner"></div>
@@ -239,125 +304,123 @@ button:hover{
 
 <div id="dashboard">
 
-<h2>Dashboard Summary</h2>
+<h3>Dashboard Summary</h3>
 
 <div class="grid">
-  <div class="card" id="total"></div>
-  <div class="card" id="normal"></div>
-  <div class="card" id="abusive"></div>
-  <div class="card" id="cyber"></div>
-  <div class="card" id="hate"></div>
-  <div class="card" id="flagged"></div>
+<div class="card" id="total"></div>
+<div class="card" id="normal"></div>
+<div class="card" id="abusive"></div>
+<div class="card" id="cyber"></div>
+<div class="card" id="hate"></div>
+<div class="card" id="flagged"></div>
 </div>
 
 <br>
-<button onclick="openResults()">View Comments</button>
+<button class="primary-btn" onclick="openResults()">View Comments</button>
 
 </div>
 
-</div>
+</section>
 
-<!-- RESULTS PAGE -->
+<!-- ========== RESULTS PAGE ========== -->
 <div id="resultsPage">
 
-<div class="topBar">
-<button onclick="closeResults()">⬅ Back</button>
-<button onclick="downloadReport()">Download PDF</button>
+<div class="results-wrapper">
+
+  <div class="results-header">
+    <button class="primary-btn" onclick="closeResults()">⬅ Back</button>
+    <button class="primary-btn" onclick="downloadReport()">Download PDF</button>
+  </div>
+
+  <h2>Comment Analyzer</h2>
+  <div class="results" id="results"></div>
+
 </div>
 
-<h2>Comment Analyzer</h2>
-<div class="results" id="results"></div>
-
 </div>
+
 
 <script>
 
-// THEME
 function toggleTheme(){
- document.body.classList.toggle("light");
+document.body.classList.toggle("light");
 }
 
-// ANALYZE
 async function analyze(){
- const url=document.getElementById("url").value.trim();
- if(url===""){alert("Paste YouTube link");return;}
 
- dashboard.style.display="none";
- loader.style.display="block";
+const url=document.getElementById("url").value.trim();
+if(url===""){alert("Paste link");return;}
 
- const res=await fetch(
- "http://127.0.0.1:8000/api/analyze-link/?url="+
- encodeURIComponent(url)
- );
+loader.style.display="block";
+dashboard.style.display="none";
 
- const data=await res.json();
+const res=await fetch(
+"http://127.0.0.1:8000/api/analyze-link/?url="+
+encodeURIComponent(url)
+);
 
- loader.style.display="none";
- dashboard.style.display="block";
+const data=await res.json();
 
- const s=data.summary;
+loader.style.display="none";
+dashboard.style.display="block";
 
- total.innerHTML="Total Comments<br><b>"+s.total_comments+"</b>";
- normal.innerHTML="Normal<br><b>"+s.normal+"</b>";
- abusive.innerHTML="Abusive<br><b>"+s.abusive+"</b>";
- cyber.innerHTML="Cyberbullying<br><b>"+s.cyberbullying+"</b>";
- hate.innerHTML="Hate Speech<br><b>"+s.hate_speech+"</b>";
- flagged.innerHTML="Total Flagged<br><b>"+s.total_flagged+"</b>";
+const s=data.summary;
 
- results.innerHTML="";
+total.innerHTML="Total: "+s.total_comments;
+normal.innerHTML="Normal: "+s.normal;
+abusive.innerHTML="Abusive: "+s.abusive;
+cyber.innerHTML="Cyberbullying: "+s.cyberbullying;
+hate.innerHTML="Hate: "+s.hate_speech;
+flagged.innerHTML="Flagged: "+s.total_flagged;
 
- data.results.forEach(item=>{
-  if(item.prediction==="NORMAL"){
-   results.innerHTML+=`<p class="normal reveal">✔ ${item.text}</p>`;
-  }else{
-   results.innerHTML+=`
-   <p class="blocked reveal">
-   ⚠ ${item.text}<br>
-   ${item.prediction}<br>
-   Confidence: ${item.confidence}<br>
-   Severity: ${item.severity_score}<br>
-   Risk: ${item.risk_level}<br>
-   Reason: ${item.explanation}<br>
-   Hash: ${item.hash}<br>
-   Time: ${item.timestamp}
-   </p>`;
-  }
- });
+results.innerHTML="";
 
- observeReveal();
+data.results.forEach(item=>{
+if(item.prediction==="NORMAL"){
+results.innerHTML+=`<p class="normal reveal">✔ ${item.text}</p>`;
+}else{
+results.innerHTML+=`
+<p class="blocked reveal">
+⚠ ${item.text}<br>
+${item.prediction}<br>
+Confidence:${item.confidence}<br>
+Severity:${item.severity_score}<br>
+Risk:${item.risk_level}<br>
+Reason:${item.explanation}<br>
+Hash:${item.hash}<br>
+Time:${item.timestamp}
+</p>`;
+}
+});
+
+observe();
 }
 
-// SCROLL REVEAL
-function observeReveal(){
- const elements=document.querySelectorAll(".reveal");
- const observer=new IntersectionObserver(entries=>{
-  entries.forEach(entry=>{
-   if(entry.isIntersecting){
-    entry.target.classList.add("show");
-   }
-  });
- });
-
- elements.forEach(el=>observer.observe(el));
+function observe(){
+document.querySelectorAll(".reveal").forEach(el=>{
+const ob=new IntersectionObserver(entries=>{
+entries.forEach(e=>{
+if(e.isIntersecting) e.target.classList.add("show");
+});
+});
+ob.observe(el);
+});
 }
 
-// NAV
 function openResults(){
- resultsPage.classList.add("active");
+resultsPage.classList.add("active");
 }
+
 function closeResults(){
- resultsPage.classList.remove("active");
+resultsPage.classList.remove("active");
 }
 
-// PDF
 function downloadReport(){
- const url=document.getElementById("url").value.trim();
- if(url===""){alert("Paste YouTube link first");return;}
-
- window.open(
- "http://127.0.0.1:8000/api/download-report/?url="+
- encodeURIComponent(url)
- );
+const url=document.getElementById("url").value.trim();
+window.open(
+"http://127.0.0.1:8000/api/download-report/?url="+
+encodeURIComponent(url)
+);
 }
 
 </script>
