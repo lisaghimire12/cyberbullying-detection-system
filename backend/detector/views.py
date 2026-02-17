@@ -13,8 +13,12 @@ from .agents import (
     classifier_agent,
     severity_agent,
     explainability_agent,
-    forensic_agent
+    forensic_agent,
+    victim_targeting_agent,
+    escalation_risk_agent,
+    harassment_density_agent
 )
+
 
 # --------------------------------
 # HOME PAGE
@@ -58,6 +62,10 @@ def analyze_link(request):
         severity_score = severity_agent(prediction, confidence)
         explanation = explainability_agent(prediction)
 
+        # 🔥 NEW AGENTIC METRICS
+        vti = victim_targeting_agent(text)
+        ers = escalation_risk_agent(confidence, severity_score)
+
         # ---------- RISK LEVEL ----------
         if severity_score >= 80:
             risk = "CRITICAL"
@@ -79,7 +87,9 @@ def analyze_link(request):
                 "confidence": round(confidence,2),
                 "severity_score": severity_score,
                 "risk_level": risk,
-                "explanation": explanation
+                "explanation": explanation,
+                "vti": vti,
+                "ers": ers
             })
 
         # ---------- HARMFUL ----------
@@ -102,8 +112,14 @@ def analyze_link(request):
                 "risk_level": risk,
                 "explanation": explanation,
                 "hash": hash_value,
-                "timestamp": timestamp
+                "timestamp": timestamp,
+                "vti": vti,
+                "ers": ers
             })
+
+    # 🔥 HARASSMENT DENSITY SCORE
+    harmful_total = abusive + cyberbullying + hate_speech
+    hds = harassment_density_agent(total_comments, harmful_total)
 
     summary = {
         "total_comments": total_comments,
@@ -111,7 +127,8 @@ def analyze_link(request):
         "abusive": abusive,
         "cyberbullying": cyberbullying,
         "hate_speech": hate_speech,
-        "total_flagged": abusive + cyberbullying + hate_speech
+        "total_flagged": harmful_total,
+        "harassment_density": hds
     }
 
     return JsonResponse({
@@ -150,6 +167,8 @@ def download_report(request):
             continue
 
         severity = severity_agent(prediction, confidence)
+        ers = escalation_risk_agent(confidence, severity)
+        vti = victim_targeting_agent(text)
         hash_value, timestamp = forensic_agent(clean)
 
         pdf.drawString(40, y, f"Comment: {text[:120]}")
@@ -157,6 +176,10 @@ def download_report(request):
         pdf.drawString(40, y, f"Prediction: {prediction}")
         y -= 14
         pdf.drawString(40, y, f"Severity: {severity}")
+        y -= 14
+        pdf.drawString(40, y, f"Victim Targeting Index: {vti}")
+        y -= 14
+        pdf.drawString(40, y, f"Escalation Risk Score: {ers}")
         y -= 14
         pdf.drawString(40, y, f"Hash: {hash_value}")
         y -= 14

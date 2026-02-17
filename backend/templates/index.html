@@ -56,6 +56,31 @@ background-size:40px 40px;
 z-index:-1;
 }
 
+/* ===== AI METRIC HIGHLIGHT BOXES ===== */
+
+.ai-metrics{
+  margin-top:30px;
+  display:flex;
+  justify-content:center;
+  gap:20px;
+  flex-wrap:wrap;
+}
+
+.metric-box{
+  background:linear-gradient(135deg,#fbcfe8,#f9a8d4);
+  color:#5b2132;
+  padding:18px 25px;
+  border-radius:14px;
+  min-width:220px;
+  font-weight:600;
+  box-shadow:0 10px 20px rgba(0,0,0,0.15);
+  transition:0.3s;
+}
+
+.metric-box:hover{
+  transform:translateY(-5px);
+}
+
 
 /* ========== NAVBAR ========== */
 nav{
@@ -116,7 +141,7 @@ transform:scale(1.05);
 box-shadow:0 0 20px var(--accent);
 }
 
-/* TERMINAL */
+/* TERMINAL 
 .terminal{
 width:45%;
 background:#0b1120;
@@ -125,6 +150,7 @@ border-radius:15px;
 border:1px solid rgba(79,209,197,0.3);
 box-shadow:0 0 25px rgba(79,209,197,0.2);
 }
+*/
 
 /* ========== SCANNER ========== */
 .scanner{
@@ -169,6 +195,10 @@ transition:0.3s;
 transform:translateY(-6px);
 box-shadow:0 0 15px var(--accent);
 }
+#hds{
+border:2px solid var(--accent);
+}
+
 
 /* RESULTS PAGE */
 .results-wrapper{
@@ -267,7 +297,7 @@ opacity:0;transform:translateY(30px);transition:0.6s;
 <body>
 
 <nav>
-<div class="logo">AI SENTINEL</div>
+<div class="logo">Context-Aware Natural Language Processing System for Harassment Filtering in Social Media Streams</div>
 
 <label class="switch">
 <input type="checkbox" onchange="toggleTheme()">
@@ -281,11 +311,6 @@ opacity:0;transform:translateY(30px);transition:0.6s;
 <button class="primary-btn" onclick="document.getElementById('scanner').scrollIntoView({behavior:'smooth'})">Launch Scanner</button>
 </div>
 
-<div class="terminal">
-<p>$ NLP Loaded</p>
-<p>$ Threat DB Updated</p>
-<p>$ System Ready...</p>
-</div>
 </section>
 
 <!-- ========== SCANNER SECTION ========== -->
@@ -314,6 +339,15 @@ opacity:0;transform:translateY(30px);transition:0.6s;
 <div class="card" id="hate"></div>
 <div class="card" id="flagged"></div>
 </div>
+
+<!-- ===== AI METRICS ROW ===== -->
+<div class="ai-metrics">
+  <div class="metric-box" id="hdsBox"></div>
+  <div class="metric-box" id="vtiBox"></div>
+  <div class="metric-box" id="ersBox"></div>
+</div>
+
+
 
 <br>
 <button class="primary-btn" onclick="openResults()">View Comments</button>
@@ -366,12 +400,30 @@ dashboard.style.display="block";
 
 const s=data.summary;
 
+// ===== CALCULATE AVERAGE VTI & ERS =====
+let totalVTI = 0;
+let totalERS = 0;
+
+data.results.forEach(item=>{
+  totalVTI += item.vti || 0;
+  totalERS += item.ers || 0;
+});
+
+let avgVTI = (totalVTI / data.results.length).toFixed(2);
+let avgERS = (totalERS / data.results.length).toFixed(2);
+
+
 total.innerHTML="Total: "+s.total_comments;
 normal.innerHTML="Normal: "+s.normal;
 abusive.innerHTML="Abusive: "+s.abusive;
 cyber.innerHTML="Cyberbullying: "+s.cyberbullying;
 hate.innerHTML="Hate: "+s.hate_speech;
 flagged.innerHTML="Flagged: "+s.total_flagged;
+hdsBox.innerHTML = "Harassment Density<br><b>"+s.harassment_density+"%</b>";
+vtiBox.innerHTML = "Victim Targeting Index<br><b>"+avgVTI+"</b>";
+ersBox.innerHTML = "Escalation Risk Score<br><b>"+avgERS+"</b>";
+
+
 
 results.innerHTML="";
 

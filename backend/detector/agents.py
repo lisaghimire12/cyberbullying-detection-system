@@ -89,3 +89,38 @@ def forensic_agent(text):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     return hash_value, timestamp
+
+
+# -----------------------------------
+# AGENT 7 — VICTIM TARGETING AGENT (VTI)
+# -----------------------------------
+def victim_targeting_agent(text):
+
+    targeting_words = ["you", "your", "u", "ur", "he", "she", "they", "him", "her"]
+    count = sum(1 for w in targeting_words if w in text.lower())
+
+    score = min(count / 5, 1)  # normalize 0 → 1
+
+    return round(score, 2)
+
+
+# -----------------------------------
+# AGENT 8 — ESCALATION RISK AGENT (ERS)
+# -----------------------------------
+def escalation_risk_agent(confidence, severity):
+
+    ers = (confidence * 50) + (severity * 0.5)
+
+    return round(ers, 2)
+
+
+# -----------------------------------
+# AGENT 9 — HARASSMENT DENSITY AGENT (HDS)
+# -----------------------------------
+def harassment_density_agent(total_comments, harmful_comments):
+
+    if total_comments == 0:
+        return 0
+
+    return round((harmful_comments / total_comments) * 100, 2)
+
