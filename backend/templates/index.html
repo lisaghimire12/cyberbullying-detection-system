@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <title>AI Sentinel - Cyberbullying Detection</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -20,19 +21,6 @@
 --accent-soft:#81E6D9;
 }
 
-.light{
---bg:#F5F9FF;        /* soft bluish white */
---panel:#FFFFFF;
---card:#ECF3FF;      /* subtle blue card */
---text:#0B1220;
---input-bg:#FFFFFF;
---input-text:#0B1220;
---accent:#4FD1C5;
---accent-soft:#81E6D9;
-}
-
-
-/* ========== BASE ========== */
 *{margin:0;padding:0;box-sizing:border-box;}
 
 body{
@@ -42,8 +30,7 @@ color:var(--text);
 overflow-x:hidden;
 }
 
-
-/* GRID */
+/* GRID BACKGROUND */
 body::before{
 content:"";
 position:fixed;
@@ -56,33 +43,7 @@ background-size:40px 40px;
 z-index:-1;
 }
 
-/* ===== AI METRIC HIGHLIGHT BOXES ===== */
-
-.ai-metrics{
-  margin-top:30px;
-  display:flex;
-  justify-content:center;
-  gap:20px;
-  flex-wrap:wrap;
-}
-
-.metric-box{
-  background:linear-gradient(135deg,#fbcfe8,#f9a8d4);
-  color:#5b2132;
-  padding:18px 25px;
-  border-radius:14px;
-  min-width:220px;
-  font-weight:600;
-  box-shadow:0 10px 20px rgba(0,0,0,0.15);
-  transition:0.3s;
-}
-
-.metric-box:hover{
-  transform:translateY(-5px);
-}
-
-
-/* ========== NAVBAR ========== */
+/* NAVBAR */
 nav{
 display:flex;
 justify-content:space-between;
@@ -97,32 +58,24 @@ font-size:22px;
 color:var(--accent);
 }
 
-.switch{
-position:relative;width:52px;height:26px;
-}
-.switch input{display:none;}
-.slider{
-position:absolute;inset:0;background:#334155;border-radius:26px;cursor:pointer;
-}
-.slider:before{
-content:"";width:22px;height:22px;background:white;border-radius:50%;
-position:absolute;top:2px;left:3px;transition:0.3s;
-}
-input:checked + .slider{background:var(--accent);}
-input:checked + .slider:before{transform:translateX(24px);}
-
-/* ========== HERO ========== */
+/* HERO */
 .hero{
 display:flex;
-justify-content:space-between;
+justify-content:flex-start;   /* FIXED LEFT ALIGN */
 align-items:center;
-padding:80px 60px;
+padding:100px 80px;
+min-height:70vh;
+}
+
+.hero > div{
+max-width:700px;
 }
 
 .hero h1{
 font-family:'Orbitron';
 font-size:60px;
 }
+
 .hero span{color:var(--accent);}
 
 .primary-btn{
@@ -141,18 +94,7 @@ transform:scale(1.05);
 box-shadow:0 0 20px var(--accent);
 }
 
-/* TERMINAL 
-.terminal{
-width:45%;
-background:#0b1120;
-padding:20px;
-border-radius:15px;
-border:1px solid rgba(79,209,197,0.3);
-box-shadow:0 0 25px rgba(79,209,197,0.2);
-}
-*/
-
-/* ========== SCANNER ========== */
+/* SCANNER */
 .scanner{
 padding:80px 60px;
 text-align:center;
@@ -195,34 +137,41 @@ transition:0.3s;
 transform:translateY(-6px);
 box-shadow:0 0 15px var(--accent);
 }
-#hds{
-border:2px solid var(--accent);
+
+/* AI METRICS */
+.ai-metrics{
+margin-top:30px;
+display:flex;
+justify-content:center;
+gap:20px;
+flex-wrap:wrap;
 }
 
+.metric-box{
+background:linear-gradient(135deg,#fbcfe8,#f9a8d4);
+color:#5b2132;
+padding:10px 16px;     /* smaller */
+border-radius:12px;
+min-width:170px;      /* smaller width */
+font-size:14px;       /* smaller text */
+font-weight:600;
+}
 
 /* RESULTS PAGE */
-.results-wrapper{
-max-width:900px;
-margin:auto;
-}
-
-.results-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:20px;
-}
-
-#resultsPage{
+#resultsPage,
+#statsPage{
 position:fixed;
-top:0;left:100%;
-width:100%;height:100%;
+top:0;
+left:100%;
+width:100%;
+height:100%;
 background:var(--bg);
 padding:40px;
 transition:0.6s;
 overflow-y:auto;
 }
-#resultsPage.active{left:0;}
+#resultsPage.active,
+#statsPage.active{left:0;}
 
 .results{
 max-width:900px;
@@ -231,65 +180,27 @@ text-align:left;
 }
 
 .reveal{
-opacity:0;transform:translateY(30px);transition:0.6s;
+opacity:0;
+transform:translateY(30px);
+transition:0.6s;
 }
-.reveal.show{opacity:1;transform:translateY(0);}
+.reveal.show{
+opacity:1;
+transform:translateY(0);
+}
 
 .normal{color:#34d399;padding:8px;}
 .blocked{color:#fb7185;border-bottom:1px solid #475569;padding:10px;}
 
-/* ===== LIGHT MODE TEXT VISIBILITY FIX ===== */
-
-.light h1,
-.light h2,
-.light h3,
-.light p,
-.light .logo,
-.light .hero h1,
-.light .hero span,
-.light .terminal p{
-  color: var(--text) !important;
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
 }
-
-/* Accent words still teal */
-.light .hero span{
-  color: var(--accent) !important;
+th,td{
+padding:10px;
+border:1px solid #334155;
 }
-
-/* Terminal box readable */
-.light .terminal{
-  background:#e8f0ff;
-  border:1px solid rgba(79,209,197,0.4);
-}
-
-/* Terminal text darker */
-.light .terminal p{
-  color:#0b1220 !important;
-}
-
-/* ===== LIGHT MODE COMMENT COLORS FIX ===== */
-
-.light .normal{
-  color:#047857;           /* deep emerald green */
-  font-weight:600;
-}
-
-.light .blocked{
-  color:#b91c1c;           /* strong red */
-  background:#fee2e2;      /* soft red background */
-  border-left:5px solid #dc2626;
-  border-radius:8px;
-  padding:12px;
-}
-
-
-.light .normal{
-  background:#dcfce7;
-  border-left:5px solid #16a34a;
-  border-radius:8px;
-  padding:10px;
-}
-
 
 </style>
 </head>
@@ -297,12 +208,7 @@ opacity:0;transform:translateY(30px);transition:0.6s;
 <body>
 
 <nav>
-<div class="logo">Context-Aware Natural Language Processing System for Harassment Filtering in Social Media Streams</div>
-
-<label class="switch">
-<input type="checkbox" onchange="toggleTheme()">
-<span class="slider"></span>
-</label>
+<div class="logo">Context-Aware NLP Harassment Filtering System</div>
 </nav>
 
 <section class="hero">
@@ -310,16 +216,13 @@ opacity:0;transform:translateY(30px);transition:0.6s;
 <h1>Detect <span>Cyberbullying</span><br>Before It Spreads</h1>
 <button class="primary-btn" onclick="document.getElementById('scanner').scrollIntoView({behavior:'smooth'})">Launch Scanner</button>
 </div>
-
 </section>
 
-<!-- ========== SCANNER SECTION ========== -->
 <section class="scanner" id="scanner">
 
 <h2>Launch YouTube Comment Scanner</h2><br>
 
 <input type="text" id="url" placeholder="Paste YouTube video URL"><br>
-
 <button class="primary-btn" onclick="analyze()">Analyze</button>
 
 <div id="loader">
@@ -340,45 +243,55 @@ opacity:0;transform:translateY(30px);transition:0.6s;
 <div class="card" id="flagged"></div>
 </div>
 
-<!-- ===== AI METRICS ROW ===== -->
 <div class="ai-metrics">
-  <div class="metric-box" id="hdsBox"></div>
-  <div class="metric-box" id="vtiBox"></div>
-  <div class="metric-box" id="ersBox"></div>
+<div class="metric-box" id="hdsBox"></div>
+<div class="metric-box" id="vtiBox"></div>
+<div class="metric-box" id="ersBox"></div>
 </div>
 
-
-
 <br>
-<button class="primary-btn" onclick="openResults()">View Comments</button>
+<button class="primary-btn" onclick="openResults()" style="margin-right:10px;">
+View Comments
+</button>
+
+<button class="primary-btn" onclick="openStats()">
+View Visual Stats
+</button>
 
 </div>
 
 </section>
 
-<!-- ========== RESULTS PAGE ========== -->
 <div id="resultsPage">
-
-<div class="results-wrapper">
-
-  <div class="results-header">
-    <button class="primary-btn" onclick="closeResults()">⬅ Back</button>
-    <button class="primary-btn" onclick="downloadReport()">Download PDF</button>
-  </div>
-
-  <h2>Comment Analyzer</h2>
-  <div class="results" id="results"></div>
-
+<button class="primary-btn" onclick="closeResults()">⬅ Back</button>
+<div class="results" id="results"></div>
 </div>
 
+<div id="statsPage">
+<button class="primary-btn" onclick="closeStats()">⬅ Back</button>
+<h2>Visual Analytics Dashboard</h2>
+<div style="width:320px;margin:auto;">
+  <canvas id="pieChart"></canvas>
 </div>
+<canvas id="lineChart"></canvas>
 
+<h3>High Risk Comments</h3>
+<table id="riskTable">
+<tr>
+<th>Comment</th>
+<th>Prediction</th>
+<th>Severity</th>
+<th>VTI</th>
+<th>ERS</th>
+</tr>
+</table>
+</div>
 
 <script>
 
-function toggleTheme(){
-document.body.classList.toggle("light");
-}
+let globalData=null;
+let pieChart=null;
+let lineChart=null;
 
 async function analyze(){
 
@@ -388,30 +301,15 @@ if(url===""){alert("Paste link");return;}
 loader.style.display="block";
 dashboard.style.display="none";
 
-const res=await fetch(
-"http://127.0.0.1:8000/api/analyze-link/?url="+
-encodeURIComponent(url)
-);
-
+const res=await fetch("http://127.0.0.1:8000/api/analyze-link/?url="+encodeURIComponent(url));
 const data=await res.json();
+
+globalData=data;
 
 loader.style.display="none";
 dashboard.style.display="block";
 
 const s=data.summary;
-
-// ===== CALCULATE AVERAGE VTI & ERS =====
-let totalVTI = 0;
-let totalERS = 0;
-
-data.results.forEach(item=>{
-  totalVTI += item.vti || 0;
-  totalERS += item.ers || 0;
-});
-
-let avgVTI = (totalVTI / data.results.length).toFixed(2);
-let avgERS = (totalERS / data.results.length).toFixed(2);
-
 
 total.innerHTML="Total: "+s.total_comments;
 normal.innerHTML="Normal: "+s.normal;
@@ -419,11 +317,14 @@ abusive.innerHTML="Abusive: "+s.abusive;
 cyber.innerHTML="Cyberbullying: "+s.cyberbullying;
 hate.innerHTML="Hate: "+s.hate_speech;
 flagged.innerHTML="Flagged: "+s.total_flagged;
-hdsBox.innerHTML = "Harassment Density<br><b>"+s.harassment_density+"%</b>";
-vtiBox.innerHTML = "Victim Targeting Index<br><b>"+avgVTI+"</b>";
-ersBox.innerHTML = "Escalation Risk Score<br><b>"+avgERS+"</b>";
 
+hdsBox.innerHTML="Harassment Density<br><b>"+s.harassment_density+"%</b>";
 
+let avgVTI=(data.results.reduce((a,b)=>a+(b.vti||0),0)/data.results.length).toFixed(2);
+let avgERS=(data.results.reduce((a,b)=>a+(b.ers||0),0)/data.results.length).toFixed(2);
+
+vtiBox.innerHTML="Victim Targeting Index<br><b>"+avgVTI+"</b>";
+ersBox.innerHTML="Escalation Risk Score<br><b>"+avgERS+"</b>";
 
 results.innerHTML="";
 
@@ -449,30 +350,100 @@ observe();
 }
 
 function observe(){
+const observer=new IntersectionObserver(entries=>{
+entries.forEach(entry=>{
+if(entry.isIntersecting){
+entry.target.classList.add("show");
+}
+});
+});
 document.querySelectorAll(".reveal").forEach(el=>{
-const ob=new IntersectionObserver(entries=>{
-entries.forEach(e=>{
-if(e.isIntersecting) e.target.classList.add("show");
-});
-});
-ob.observe(el);
+observer.observe(el);
 });
 }
 
-function openResults(){
-resultsPage.classList.add("active");
-}
+function openResults(){resultsPage.classList.add("active");}
+function closeResults(){resultsPage.classList.remove("active");}
+function openStats(){statsPage.classList.add("active");drawCharts();}
+function closeStats(){statsPage.classList.remove("active");}
 
-function closeResults(){
-resultsPage.classList.remove("active");
-}
+function drawCharts(){
 
-function downloadReport(){
-const url=document.getElementById("url").value.trim();
-window.open(
-"http://127.0.0.1:8000/api/download-report/?url="+
-encodeURIComponent(url)
-);
+if(pieChart) pieChart.destroy();
+if(lineChart) lineChart.destroy();
+
+const s=globalData.summary;
+
+pieChart=new Chart(document.getElementById("pieChart"),{
+type:"pie",
+data:{
+labels:["Normal","Abusive","Cyberbullying","Hate-speech"],
+datasets:[{
+data:[s.normal,s.abusive,s.cyberbullying,s.hate_speech],
+backgroundColor:["#9d2cc0","#fb7185","#f472b6","#facc15"]
+}]
+},
+options:{
+responsive:true,
+maintainAspectRatio:false,
+animation:{animateScale:true}
+}
+});
+
+let ers=globalData.results.map(r=>r.ers||0);
+
+lineChart=new Chart(document.getElementById("lineChart"),{
+type:"line",
+data:{
+labels:ers.map((_,i)=>i+1),
+datasets:[{
+label:"Escalation Risk Trend",
+data:ers,
+borderColor:"#4FD1C5",
+backgroundColor:"rgba(79,209,197,.4)",
+fill:true,
+tension:0.4
+}]
+},
+options:{
+animation:{duration:1500},
+scales:{
+x:{
+title:{
+display:true,
+text:"Comment Index"
+}
+},
+y:{
+title:{
+display:true,
+text:"Escalation Risk Score (ERS)"
+},
+beginAtZero:true
+}
+}
+}
+});
+
+const table=document.getElementById("riskTable");
+table.innerHTML=`<tr>
+<th>Comment</th><th>Prediction</th><th>Severity</th><th>VTI</th><th>ERS</th>
+</tr>`;
+
+// sort by ERS descending
+let highRisk = globalData.results
+.filter(r => r.prediction !== "NORMAL")
+.sort((a,b) => (b.ers||0) - (a.ers||0))
+.slice(0,10);   // TOP 10 ONLY
+
+highRisk.forEach(r=>{
+let row=table.insertRow();
+row.insertCell(0).innerText=r.text.slice(0,70);
+row.insertCell(1).innerText=r.prediction;
+row.insertCell(2).innerText=r.severity_score;
+row.insertCell(3).innerText=r.vti;
+row.insertCell(4).innerText=r.ers;
+});
 }
 
 </script>
