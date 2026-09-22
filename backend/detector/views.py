@@ -1,12 +1,12 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-from django.http import HttpResponse
-from .link_agents import detect_link_type, fetch_youtube_comments
-import io
 
+import matplotlib.pyplot as plt
+
+from .link_agents import detect_link_type, fetch_youtube_comments
 
 from .agents import (
     preprocess_agent,
@@ -19,12 +19,19 @@ from .agents import (
     harassment_density_agent
 )
 
+import io
+import logging
+import time
+
+logger = logging.getLogger(__name__)
+
 
 # --------------------------------
 # HOME PAGE
 # --------------------------------
 def home(request):
     return render(request, "index.html")
+
 
 # --------------------------------
 # YOUTUBE LINK ANALYSIS
@@ -40,6 +47,9 @@ def analyze_link(request):
     if detect_link_type(url) != "youtube":
         return JsonResponse({"error": "Only YouTube links supported"})
 
+    logger.info("\n=========== NEW ANALYSIS REQUEST ===========")
+    logger.info(f"[SYSTEM] Fetching comments from: {url}")
+
     comments = fetch_youtube_comments(url)
 
     results = []
@@ -51,22 +61,49 @@ def analyze_link(request):
     cyberbullying = 0
     hate_speech = 0
 
+    # -------- GRAPH DATA --------
+    processing_times = []
+    comment_indices = []
+
     # -----------------------------------
-    for text in comments:
+    # AGENTIC AI PIPELINE
+    # -----------------------------------
+    for idx, text in enumerate(comments, start=1):
+
+        logger.info("\n========== NEW COMMENT ==========")
+        logger.info(f"[COMMENT {idx}] {text[:80]}")
+
+        start_time = time.time()
 
         total_comments += 1
 
-        clean = preprocess_agent(text)
-        prediction, confidence = classifier_agent(clean)
+        # INPUT
+        logger.info("[INPUT AGENT] Receiving text")
 
+        # PREPROCESS
+        clean = preprocess_agent(text)
+        logger.info("[PREPROCESS AGENT] Text cleaned")
+
+        # CLASSIFICATION
+        prediction, confidence = classifier_agent(clean)
+        logger.info(
+            f"[CLASSIFIER AGENT] Prediction={prediction} | Confidence={confidence:.2f}"
+        )
+
+        # SEVERITY
         severity_score = severity_agent(prediction, confidence)
+        logger.info(f"[SEVERITY AGENT] Score={severity_score}")
+
         explanation = explainability_agent(prediction)
 
-        # 🔥 NEW AGENTIC METRICS
+        # NEW AGENTIC METRICS
         vti = victim_targeting_agent(text)
-        ers = escalation_risk_agent(confidence, severity_score)
+        logger.info(f"[VTI AGENT] Index={vti}")
 
-        # ---------- RISK LEVEL ----------
+        ers = escalation_risk_agent(confidence, severity_score)
+        logger.info(f"[ERS AGENT] Score={ers}")
+
+        # RISK LEVEL
         if severity_score >= 80:
             risk = "CRITICAL"
         elif severity_score >= 60:
@@ -76,7 +113,9 @@ def analyze_link(request):
         else:
             risk = "LOW"
 
-        # ---------- NORMAL ----------
+        logger.info(f"[RISK LEVEL] {risk}")
+
+        # NORMAL
         if prediction == "NORMAL":
 
             normal += 1
@@ -84,7 +123,7 @@ def analyze_link(request):
             results.append({
                 "text": text,
                 "prediction": prediction,
-                "confidence": round(confidence,2),
+                "confidence": round(confidence, 2),
                 "severity_score": severity_score,
                 "risk_level": risk,
                 "explanation": explanation,
@@ -92,7 +131,7 @@ def analyze_link(request):
                 "ers": ers
             })
 
-        # ---------- HARMFUL ----------
+        # HARMFUL
         else:
 
             if prediction == "ABUSIVE":
@@ -103,11 +142,12 @@ def analyze_link(request):
                 hate_speech += 1
 
             hash_value, timestamp = forensic_agent(clean)
+            logger.info("[FORENSIC AGENT] Evidence generated")
 
             results.append({
                 "text": text,
                 "prediction": prediction,
-                "confidence": round(confidence,2),
+                "confidence": round(confidence, 2),
                 "severity_score": severity_score,
                 "risk_level": risk,
                 "explanation": explanation,
@@ -117,9 +157,24 @@ def analyze_link(request):
                 "ers": ers
             })
 
-    # 🔥 HARASSMENT DENSITY SCORE
+        # PROCESSING TIME
+        end_time = time.time()
+        processing_times.append(end_time - start_time)
+        comment_indices.append(idx)
+
+        logger.info("=================================")
+
+    # --------------------------------
+    # HARASSMENT DENSITY SCORE
+    # --------------------------------
     harmful_total = abusive + cyberbullying + hate_speech
     hds = harassment_density_agent(total_comments, harmful_total)
+
+    logger.info("\n========== VIDEO SUMMARY ==========")
+    logger.info(f"Total Comments: {total_comments}")
+    logger.info(f"Harmful Comments: {harmful_total}")
+    logger.info(f"Harassment Density Score: {hds}%")
+    logger.info("===================================")
 
     summary = {
         "total_comments": total_comments,
@@ -131,17 +186,36 @@ def analyze_link(request):
         "harassment_density": hds
     }
 
+    # --------------------------------
+    # BACKEND GRAPH GENERATION
+    # --------------------------------
+    plt.figure(figsize=(8,4))
+
+    plt.plot(comment_indices, processing_times, marker='o')
+
+    plt.title("Backend Processing Time per Comment")
+    plt.xlabel("Comment Number")
+    plt.ylabel("Processing Time (seconds)")
+
+    plt.grid(True)
+
+    plt.savefig("processing_graph.png")
+
+    logger.info("Backend graph generated: processing_graph.png")
+
     return JsonResponse({
         "summary": summary,
         "results": results
     })
 
 
+# --------------------------------
+# DOWNLOAD PDF REPORT
+# --------------------------------
 @csrf_exempt
 def download_report(request):
 
     url = request.GET.get("url", "")
-
     comments = fetch_youtube_comments(url)
 
     buffer = io.BytesIO()
@@ -167,8 +241,8 @@ def download_report(request):
             continue
 
         severity = severity_agent(prediction, confidence)
-        ers = escalation_risk_agent(confidence, severity)
         vti = victim_targeting_agent(text)
+        ers = escalation_risk_agent(confidence, severity)
         hash_value, timestamp = forensic_agent(clean)
 
         pdf.drawString(40, y, f"Comment: {text[:120]}")
@@ -197,3 +271,4 @@ def download_report(request):
     response["Content-Disposition"] = "attachment; filename=forensic_report.pdf"
 
     return response
+

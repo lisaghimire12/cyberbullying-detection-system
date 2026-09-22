@@ -2,6 +2,9 @@ import pickle
 import os
 import hashlib
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 # -----------------------------------
 # LOAD ML MODEL & VECTORIZER
@@ -17,6 +20,7 @@ vectorizer = pickle.load(open(os.path.join(BASE_DIR, "model/vectorizer.pkl"), "r
 # AGENT 1 — INPUT AGENT
 # -----------------------------------
 def input_agent(text):
+    logger.info(f"[INPUT AGENT] Received text: {text[:50]}")
     return text.strip().lower()
 
 
@@ -24,6 +28,7 @@ def input_agent(text):
 # AGENT 2 — PREPROCESS AGENT
 # -----------------------------------
 def preprocess_agent(text):
+    logger.info("[PREPROCESS AGENT] Cleaning text")
     return text
 
 
@@ -41,6 +46,9 @@ def classifier_agent(text):
 
     # 🔥 CRITICAL FIX
     prediction = prediction.strip().upper()
+    logger.info(
+        f"[CLASSIFIER AGENT] Prediction={prediction} Confidence={confidence:.2f}"
+    )
 
     return prediction, confidence
 
@@ -60,6 +68,8 @@ def severity_agent(prediction, confidence):
     base = base_scores.get(prediction, 0)
 
     severity_score = int(base * confidence)
+    
+    logger.info(f"[SEVERITY AGENT] Score={severity_score}")
 
     return severity_score
 

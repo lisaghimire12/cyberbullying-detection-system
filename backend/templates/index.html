@@ -224,6 +224,9 @@ border:1px solid #334155;
 
 <input type="text" id="url" placeholder="Paste YouTube video URL"><br>
 <button class="primary-btn" onclick="analyze()">Analyze</button>
+<button class="primary-btn" onclick="downloadReport()">
+Download Evidence Report
+</button>
 
 <div id="loader">
 <div class="spinner"></div>
@@ -444,6 +447,22 @@ row.insertCell(2).innerText=r.severity_score;
 row.insertCell(3).innerText=r.vti;
 row.insertCell(4).innerText=r.ers;
 });
+}
+
+function downloadReport(){
+
+const url = document.getElementById("url").value.trim();
+
+if(url===""){
+    alert("Paste link");
+    return;
+}
+
+window.open(
+    "http://127.0.0.1:8000/api/download-report/?url=" 
+    + encodeURIComponent(url)
+);
+
 }
 
 </script>
